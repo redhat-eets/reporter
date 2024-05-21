@@ -1,0 +1,48 @@
+# Sample configuration file
+# This files serves as an example for creating custom config files
+# Note that it is not needed to redeclare the vars already set in the default config file
+apiVersion: v1
+spec:
+  # Optional. Declare this section only if you want to overwrite the default Jira config
+  jira:
+    # Specify which Jira instance to connect to
+    server:
+      url: "https://issues.redhat.com"
+
+    # Configure constraints for auto-discovery of Jira issues
+    discovery:
+      summary:
+        requiredPrefix: "QE"
+      labels:
+        requiredAnyOf:
+          - TELCO-V10N-FT
+          - TELCO-V10N-ST
+          - TELCO-V10N-SLCM
+
+    # Describe the desired state of the Jira issue with test results
+    desiredState:
+      summary:
+        contents: "Automated test suite execution status"
+        includeTestCounts: true
+      description:
+        templatePath: "templates/jira_subtask_desc.tmpl"
+      onSuccess:
+        labels:
+          - TELCO-V10N-TEST-SUITE-PASSED
+      onFailure:
+        labels:
+          - TELCO-V10N-TEST-SUITE-FAILED
+
+  # Configure routing rules for selected JUnit test reports
+  reporting:
+    routing:
+      - destination: TELCOV10N-77
+        testSuites:
+          - name: "*"
+
+      - destination: TELCOV10N-62
+        testSuites:
+          - name: "E2E Integration tests"
+            testCases:
+              - name: "Validate egress"
+              - name: "Validate ingress"

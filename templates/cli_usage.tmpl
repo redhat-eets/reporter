@@ -1,0 +1,37 @@
+Usage of {{ .ProgramName }}: {{ if .SelectedCommand }}{{ .SelectedCommand }}{{ end }}
+
+{{- if .AvailableCommands }}
+
+Available commands
+{{- range .AvailableCommands }}
+  {{ . }}
+{{- end }}
+{{- end }}
+
+Options
+{{ .AvailableOptions }}
+Did you know?
+  * You will not be able to upload test reports to Jira unless you provide a valid Personal Access Token (PAT).
+  * Jira PATs can be easily passed using the "{{ .JiraAccessTokenEnvVar }}" environment variable or the -t/--jira-token flag.
+  * A custom config file will let you route individual Test Suites and Test Cases to different Jira issues!
+
+Usage examples
+  1) Load a test report and preview how it is processed before uploading
+  {{ .ProgramName }} upload -i test-report.xml --no-sync
+
+  2) Upload a test report to Jira issue "EXAMPLE-15"
+  {{ .ProgramName }} upload -i test-report.xml -d EXAMPLE-15
+
+  3) Upload all test reports at "artifacts/" and "junit/" to Jira issue "EXAMPLE-15"
+  {{ .ProgramName }} upload -i artifacts/ -i junit/ -d EXAMPLE-15
+
+  4) Upload all test reports at the default "input/" directory to Jira issue "EXAMPLE-15"
+  {{ .ProgramName }} upload -d EXAMPLE-15
+
+  5) Load a custom config file and upload test reports
+  {{ .ProgramName }} upload -c custom-config.yaml
+
+  6) Upload test reports to an alternative Jira server instance
+  {{ .ProgramName }} upload -s "http://localhost:8080" -t "secret-token"
+
+Find more at: https://github.com/redhat-eets/reporter

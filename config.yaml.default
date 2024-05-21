@@ -1,0 +1,32 @@
+# Default configuration file
+# This file is automatically loaded by the program at runtime
+apiVersion: v1
+spec:
+  jira:
+    # Specify which Jira instance to connect to
+    server:
+      url: "https://issues.redhat.com"
+
+    # Configure constraints for auto-discovery of Jira issues
+    discovery:
+      summary:
+        requiredPrefix: "QE"
+      labels:
+        requiredAnyOf:
+          - TELCO-V10N-FT
+          - TELCO-V10N-ST
+          - TELCO-V10N-SLCM
+
+    # Describe the desired state of the Jira issue with test results
+    desiredState:
+      summary:
+        contents: "Automated test suite execution status"
+        includeTestCounts: true
+      description:
+        templatePath: "templates/jira_subtask_desc.tmpl"
+      onSuccess:
+        labels:
+          - TELCO-V10N-TEST-SUITE-PASSED
+      onFailure:
+        labels:
+          - TELCO-V10N-TEST-SUITE-FAILED
