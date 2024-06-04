@@ -1,0 +1,208 @@
+= Reporter
+
+ifdef::env-github[]
+:note-caption: :information_source:
+:important-caption: :warning:
+endif::[]
+
+Reporter is a simple CLI tool that provides a convenient way to synchronize test results to Jira.
+
+You can leverage this tool to keep stakeholders and adjacent teams informed about the status and health of features, releases or any other deliverable tracked in Jira. One possible use case for this tool is to sync pipeline status from various CI/CD systems, and display that information on a Jira dashboard.
+
+Reporter works by processing one or more JUnit test reports given as input, and uploading the results to dedicated Jira Issues managed by Reporter, which then can be queried for information using the Jira Query Language (JQL).
+
+IMPORTANT: This tool is not supported commercially by Red Hat.
+
+== Getting started
+
+=== Installation
+
+NOTE: Ready-to-use binaries for various architectures can be found on the https://github.com/redhat-eets/reporter/releases[Releases] page.
+
+To download the latest available binary for an `x86-64` linux-based system, issue the following commands:
+
+[source, text]
+-----
+$ wget https://github.com/redhat-eets/reporter/releases/latest/download/reporter_Linux_x86_64 -O /tmp/reporter
+$ chmod +x /tmp/reporter
+-----
+
+*(Optional)* To make the `reporter` binary easier to discover, move the binary to one of the directories defined in your `$PATH` such as `/usr/local/bin`:
+
+[source, text]
+-----
+$ mv -n /tmp/reporter /usr/local/bin/reporter
+-----
+
+Once you download the binary, see the section below to understand how to run Reporter for the first time.
+
+=== Dry run
+
+The easiest way to learn how to use the tool is to enable the `-n/--no-sync` flag and start experimenting with the CLI.
+
+If this flag is present, no requests are sent to Jira when executing the command of your choice. This is great for testing various CLI options and custom configuration files.
+
+Assuming you have a JUnit test report in the current working directory named `test-report.xml`, you can let Reporter process the file, display the results (test counts, etc) and simulate uploading the results to Jira with the following command:
+
+[source, text]
+-----
+$ reporter upload -i test-report.xml --no-sync
+-----
+
+Once you verify that Reporter reads and processes your JUnit test reports correctly, you can start uploading the results. For that you will need to configure access to Jira, which is covered in the next section.
+
+=== Authentication
+
+To upload test results to Jira with Reporter, you must first https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html[obtain a Personal Access Token (PAT)] to authenticate the API requests with.
+
+NOTE: If you are using Reporter in a CI/CD pipeline, consider creating a new, dedicated Jira service account with limited permissions. Refer to your organization's internal guidelines for information on how to create such an account.
+
+*(Recommended)* The easiest way to provide the Personal Access Token to Reporter is by setting an environment variable named `REPORTER_JIRA_TOKEN`. The token will then be read automatically.
+
+[source, text]
+-----
+$ export REPORTER_JIRA_TOKEN=<access-token>
+$ reporter upload -i test-report.xml
+-----
+
+NOTE: If you are using Reporter in a CI/CD pipeline, consider saving the `REPORTER_JIRA_TOKEN` environment variable using the dedicated functionality of your CI/CD system for storing secrets instead of `exporting` the value in the job itself.
+
+*(Not recommended)* It is also possible to provide the PAT using the `-t/--jira-token` option. Be careful when using this method as you can accidentally log the token causing a potential data leak.
+
+[source, text]
+-----
+$ reporter upload -i test-report.xml -t <access-token>
+-----
+
+=== Configuration [[getting_started_configuration]]
+
+To tweak the behavior of Reporter, you can create a custom configuration file.
+
+By default, the tool will look for a `config.yaml` file in the current working directory. As config files are completely optional, Reporter will not terminate even if it does not find one.
+
+See link:config.yaml.default[config.yaml.default] to review the default values used by Reporter and link:config.yaml.sample[config.yaml.sample] for a full example of a configuration file that you could create.
+
+NOTE: Loading a custom configuration file does not replace all default values, just the ones that you have defined in the custom config. This means that if you are mostly happy with the default values Reporter ships with, you can maintain a tiny custom configuration file that overwrites just one or two values.
+
+To specify a path to a custom configuration file, set the `-c/--config` option:
+
+[source, text]
+-----
+$ reporter upload -c custom-config.yaml
+-----
+
+== Basic usage
+
+=== Selecting input data
+
+To upload test results to Jira, specify one or more paths to JUnit test reports with the `-i/--input` option. You can also provide a path to a directory instead of listing individual files.
+
+By default, Reporter will look for test reports in the `input/` directory (if such directory exists). +
+This means that this command:
+
+[source, text]
+-----
+$ reporter upload -i input/ --no-sync
+-----
+
+Is equivalent to:
+
+[source, text]
+-----
+$ reporter upload --no-sync
+-----
+
+Place the test reports in the `input/` directory and run the command listed above.
+
+=== Uploading results
+
+Now, if all your JUnit test reports can be parsed correctly by Reporter, specify the destination where the results should be uploaded to.
+
+The destination can be either one of the following:
+
+* *Jira Story*. Reporter will first analyze the Story and check if it contains the required summary and labels (as defined in the default configuration file). Then, it will search for any Sub-tasks under the Story that match the Reporter configuration. If no valid Sub-task exists, Reporter will create a new Sub-task and post the results there. If the Sub-task already exists, it will update it with the latest test results.
+* *Jira Sub-task*. Reporter will first analyze the Sub-task and check if it resembles a Sub-task that the tool would create (as defined in the default configuration file). If it is a valid Sub-task, Reporter will update it with the latest test results.
+
+To upload test results from reports stored in the `input/` directory to a Jira Issue `EXAMPLE-15`, issue the following command:
+
+[source, text]
+-----
+$ reporter upload -d EXAMPLE-15
+-----
+
+In some scenarios, specifying one destination for all test results might not be practical. Refer to the next chapter to learn how to configure more advanced routing for test reports.
+
+== Advanced usage
+
+=== Configuring routing rules
+
+NOTE: Make sure you have read the <<getting_started_configuration>> section first.
+
+You can control which test suite (and test case) result will be reported to which destination by creating a custom configuration file and defining routing rules in the `reporting.routing` section.
+
+Assume you want to upload just one test suite named _"Example end-to-end tests"_ to Jira Issue `EXAMPLE-15`, and filter out everything else. This could be achieved with a custom configuration file like the following:
+
+[source, yaml]
+-----
+apiVersion: v1
+spec:
+  reporting:
+    routing:
+      - destination: EXAMPLE-15
+        testSuites:
+          - name: "Example end-to-end tests"
+-----
+
+It is also possible to choose which test cases should be included in the final result. To that end, define a `testCases` section under the relevant test suite entry and list the test cases by name.
+
+To create a match-all rule, use the `"*"` symbol.
+
+The following example defines a match-all rule for test cases of _"Example end-to-end tests"_, which makes it functionally identical to the previous example.
+
+[source, yaml]
+-----
+apiVersion: v1
+spec:
+  reporting:
+    routing:
+      - destination: EXAMPLE-15
+        testSuites:
+          - name: "Example end-to-end tests"
+            testCases:
+              - name: "*"
+-----
+
+You can define as many destinations as you want, and as many test suite or test case configurations as you want. The following example defines three destinations: `EXAMPLE-15`, `EXAMPLE-20` and `EXAMPLE-25`, where only the selected test suites and test cases will be uploaded, as defined in the configuration listed below.
+
+NOTE: Writing configuration files by hand is not required -- for more complicated setups, you could consider writing a script that would generate this file automatically.
+
+[source, yaml]
+-----
+apiVersion: v1
+spec:
+  reporting:
+    routing:
+      - destination: EXAMPLE-15
+        testSuites:
+          - name: "Example end-to-end tests"
+            testCases:
+              - name: "[rh] Service is reachable"
+              - name: "[rh] System backup can be scheduled"
+              - name: "[rh] Service can be rolled back"
+
+      - destination: EXAMPLE-20
+        testSuites:
+          - name: "Example feature A unit tests"
+          - name: "Example feature A system tests"
+
+      - destination: EXAMPLE-25
+        testSuites:
+          - name: "*"
+-----
+
+To upload test results from reports stored in the `input/` directory to the destinations defined in the `config.yaml` file, issue the following command:
+
+[source, text]
+-----
+$ reporter upload
+-----
