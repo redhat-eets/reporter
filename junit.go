@@ -3,8 +3,10 @@ package reporter
 import (
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/joshdk/go-junit"
+	"golang.org/x/exp/maps"
 )
 
 // MatchAllSymbol defines which symbol will be used to represent a rule that accepts any string as input.
@@ -79,6 +81,27 @@ func LogAggregateReports(logger *log.Logger, reports []AggregateReport) {
 	}
 }
 
+func groupRouteConfigsByDestination(routeConfigs []ReportingRouteConfig) []ReportingRouteConfig {
+	configs := map[string][]ReportingTestSuiteConfig{}
+	for _, config := range routeConfigs {
+		configs[config.Destination] = append(configs[config.Destination], config.TestSuites...)
+	}
+
+	destinations := maps.Keys(configs)
+	sort.Strings(destinations)
+
+	groupedRouteConfigs := []ReportingRouteConfig{}
+	for _, dest := range destinations {
+		suites := configs[dest]
+		groupedRouteConfigs = append(groupedRouteConfigs, ReportingRouteConfig{
+			Destination: dest,
+			TestSuites:  suites,
+		})
+	}
+
+	return groupedRouteConfigs
+}
+
 // ProcessJUnitReports loads and analyzes JUnit Test Reports according to the routing config defined by the user.
 func ProcessJUnitReports(paths []string, config ReportingConfig) (reports []AggregateReport, err error) {
 	suites, err := junit.IngestFiles(paths)
@@ -91,7 +114,8 @@ func ProcessJUnitReports(paths []string, config ReportingConfig) (reports []Aggr
 		routing = []ReportingRouteConfig{{}}
 	}
 
-	for _, route := range routing {
+	routes := groupRouteConfigsByDestination(routing)
+	for _, route := range routes {
 		report := ProcessJUnitSuites(suites, route)
 		reports = append(reports, report)
 	}
