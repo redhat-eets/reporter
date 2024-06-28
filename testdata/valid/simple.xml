@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" disabled="0" errors="0" failures="0" time="10.123456789">
+    <testsuite name="Reporter Test Data Valid Report - Simple" package="/var/lib/reporter/testdata"
+        tests="1" disabled="0" skipped="0" errors="0" failures="0" time="10.123456789"
+        timestamp="2024-01-02T03:04:05">
+        <testcase name="" classname="Reporter Test Data Valid Report - Simple" status="passed"
+            time="10.123456789"></testcase>
+    </testsuite>
+</testsuites>
