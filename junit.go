@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 
 	"github.com/joshdk/go-junit"
 	"golang.org/x/exp/maps"
@@ -123,6 +124,31 @@ func ProcessJUnitReports(paths []string, config ReportingConfig) (reports []Aggr
 	return reports, nil
 }
 
+func isEntityMatchedByNameRule(entityName string, nameRule string) bool {
+	if nameRule == "" {
+		return false
+	}
+
+	return nameRule == MatchAllSymbol || nameRule == entityName
+}
+
+func isEntityMatchedByPropertyRule(entityProperties map[string]string, propertyRule string) bool {
+	if propertyRule == "" {
+		return false
+	}
+
+	separator := "="
+	p := strings.Split(propertyRule, separator)
+	if len(p) < 2 {
+		return false
+	}
+
+	name := p[0]
+	value := strings.Join(p[1:], separator)
+
+	return entityProperties[name] == value
+}
+
 // ProcessJUnitSuites processes all loaded Test Suites according to a given routing configuration.
 // A single AggregateReport will be created for each route defined by the user. If any Test Suites
 // or Test Cases match any of the rules defined for this route, they will be added to the Report.
@@ -140,13 +166,15 @@ func ProcessJUnitSuites(suites []junit.Suite, route ReportingRouteConfig) (repor
 		}
 
 		if route.TestSuites != nil {
-			for _, testSuiteRule := range route.TestSuites {
-				if testSuiteRule.Name == MatchAllSymbol || testSuiteRule.Name == suite.Name {
-					if testSuiteRule.TestCases != nil {
-						testCaseRules = append(testCaseRules, testSuiteRule.TestCases...)
+			for _, rule := range route.TestSuites {
+				if isEntityMatchedByNameRule(suite.Name, rule.Name) {
+					if rule.TestCases != nil {
+						testCaseRules = append(testCaseRules, rule.TestCases...)
 					} else {
 						testCaseRules = append(testCaseRules, testCaseRuleMatchAll)
 					}
+				} else if isEntityMatchedByPropertyRule(suite.Properties, rule.Property) {
+					testCaseRules = append(testCaseRules, rule.TestCases...)
 				}
 			}
 		} else {
@@ -158,10 +186,8 @@ func ProcessJUnitSuites(suites []junit.Suite, route ReportingRouteConfig) (repor
 			// This loop could be optimized, but it probably is not worth the extra effort
 			for _, test := range suite.Tests {
 				for _, rule := range testCaseRules {
-					if rule.Name == MatchAllSymbol || test.Name == rule.Name {
+					if isEntityMatchedByNameRule(test.Name, rule.Name) || isEntityMatchedByPropertyRule(test.Properties, rule.Property) {
 						processedTestSuite.Counts.Add(test)
-					} else if rule.Property != "" {
-						// TODO: add test case matching by JUnit property
 					}
 				}
 			}
