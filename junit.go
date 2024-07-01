@@ -3,8 +3,11 @@ package reporter
 import (
 	"fmt"
 	"log"
+	"sort"
+	"strings"
 
 	"github.com/joshdk/go-junit"
+	"golang.org/x/exp/maps"
 )
 
 // MatchAllSymbol defines which symbol will be used to represent a rule that accepts any string as input.
@@ -79,6 +82,27 @@ func LogAggregateReports(logger *log.Logger, reports []AggregateReport) {
 	}
 }
 
+func groupRouteConfigsByDestination(routeConfigs []ReportingRouteConfig) []ReportingRouteConfig {
+	configs := map[string][]ReportingTestSuiteConfig{}
+	for _, config := range routeConfigs {
+		configs[config.Destination] = append(configs[config.Destination], config.TestSuites...)
+	}
+
+	destinations := maps.Keys(configs)
+	sort.Strings(destinations)
+
+	groupedRouteConfigs := []ReportingRouteConfig{}
+	for _, dest := range destinations {
+		suites := configs[dest]
+		groupedRouteConfigs = append(groupedRouteConfigs, ReportingRouteConfig{
+			Destination: dest,
+			TestSuites:  suites,
+		})
+	}
+
+	return groupedRouteConfigs
+}
+
 // ProcessJUnitReports loads and analyzes JUnit Test Reports according to the routing config defined by the user.
 func ProcessJUnitReports(paths []string, config ReportingConfig) (reports []AggregateReport, err error) {
 	suites, err := junit.IngestFiles(paths)
@@ -91,12 +115,38 @@ func ProcessJUnitReports(paths []string, config ReportingConfig) (reports []Aggr
 		routing = []ReportingRouteConfig{{}}
 	}
 
-	for _, route := range routing {
+	routes := groupRouteConfigsByDestination(routing)
+	for _, route := range routes {
 		report := ProcessJUnitSuites(suites, route)
 		reports = append(reports, report)
 	}
 
 	return reports, nil
+}
+
+func isEntityMatchedByNameRule(entityName string, nameRule string) bool {
+	if nameRule == "" {
+		return false
+	}
+
+	return nameRule == MatchAllSymbol || nameRule == entityName
+}
+
+func isEntityMatchedByPropertyRule(entityProperties map[string]string, propertyRule string) bool {
+	if propertyRule == "" {
+		return false
+	}
+
+	separator := "="
+	p := strings.Split(propertyRule, separator)
+	if len(p) < 2 {
+		return false
+	}
+
+	name := p[0]
+	value := strings.Join(p[1:], separator)
+
+	return entityProperties[name] == value
 }
 
 // ProcessJUnitSuites processes all loaded Test Suites according to a given routing configuration.
@@ -116,13 +166,15 @@ func ProcessJUnitSuites(suites []junit.Suite, route ReportingRouteConfig) (repor
 		}
 
 		if route.TestSuites != nil {
-			for _, testSuiteRule := range route.TestSuites {
-				if testSuiteRule.Name == MatchAllSymbol || testSuiteRule.Name == suite.Name {
-					if testSuiteRule.TestCases != nil {
-						testCaseRules = append(testCaseRules, testSuiteRule.TestCases...)
+			for _, rule := range route.TestSuites {
+				if isEntityMatchedByNameRule(suite.Name, rule.Name) {
+					if rule.TestCases != nil {
+						testCaseRules = append(testCaseRules, rule.TestCases...)
 					} else {
 						testCaseRules = append(testCaseRules, testCaseRuleMatchAll)
 					}
+				} else if isEntityMatchedByPropertyRule(suite.Properties, rule.Property) {
+					testCaseRules = append(testCaseRules, rule.TestCases...)
 				}
 			}
 		} else {
@@ -134,10 +186,8 @@ func ProcessJUnitSuites(suites []junit.Suite, route ReportingRouteConfig) (repor
 			// This loop could be optimized, but it probably is not worth the extra effort
 			for _, test := range suite.Tests {
 				for _, rule := range testCaseRules {
-					if rule.Name == MatchAllSymbol || test.Name == rule.Name {
+					if isEntityMatchedByNameRule(test.Name, rule.Name) || isEntityMatchedByPropertyRule(test.Properties, rule.Property) {
 						processedTestSuite.Counts.Add(test)
-					} else if rule.Property != "" {
-						// TODO: add test case matching by JUnit property
 					}
 				}
 			}

@@ -206,3 +206,93 @@ To upload test results from reports stored in the `input/` directory to the dest
 -----
 $ reporter upload
 -----
+
+=== Matching by property
+
+Instead of defining routing rules using test suite and test case names, you can directly reference JUnit properties to do the matching.
+
+Assume you want to upload a set of test reports to Jira `EXAMPLE-15` where each applicable test suite is label with a property `report_results` set to `True`. This could be achieved with a custom configuration file like the following:
+
+[source, yaml]
+-----
+apiVersion: v1
+spec:
+  reporting:
+    routing:
+      - destination: EXAMPLE-15
+        testSuites:
+          - property: "report_results=True"
+            testCases:
+              - name: "*"
+-----
+
+If you apply this custom configuration to a test report structured like in the example below, then the test cases `one`, `two` and `three` will be uploaded to `EXAMPLE-15`, while test cases `four` and `five` will be ignored as their parent test suite lacks the required property.
+
+[source, xml]
+-----
+<testsuites>
+  <testsuite>
+    <properties>
+      <property name="report_results" value="True"></property>
+    </properties>
+    <testcase name="one" status="passed"></testcase>
+    <testcase name="two" status="passed"></testcase>
+    <testcase name="three" status="passed"></testcase>
+  </testsuite>
+
+  <testsuite>
+    <testcase name="four" status="passed"></testcase>
+    <testcase name="five" status="passed"></testcase>
+  </testsuite>
+</testsuites>
+-----
+
+Matching individual test cases by property is also possible. Consider the following example for a scenario where each test case is labeled with a property referencing an entity in an external system (in this case, this system is Polarion).
+
+The custom configuration listed below would allow you to upload test results to Jira by mapping the relationship between the external system and your destinations in Jira.
+
+[source, yaml]
+-----
+apiVersion: v1
+spec:
+  reporting:
+    routing:
+      - destination: EXAMPLE-20
+        testSuites:
+          - name: "*"
+            testCases:
+              - property: "polarion-testcase-id=POL-100"
+
+      - destination: EXAMPLE-25
+        testSuites:
+          - name: "*"
+            testCases:
+              - property: "polarion-testcase-id=POL-105"
+-----
+
+When applied to a test report structured like in the example below, test cases `one` and `two` will be uploaded to `EXAMPLE-20`, while test case `three` will be uploaded to `EXAMPLE-25`.
+
+[source, xml]
+-----
+<testsuites>
+  <testsuite>
+    <testcase name="one" status="passed">
+      <properties>
+        <property name="polarion-testcase-id" value="POL-100"></property>
+      </properties>
+    </testcase>
+
+    <testcase name="two" status="passed">
+      <properties>
+        <property name="polarion-testcase-id" value="POL-100"></property>
+      </properties>
+    </testcase>
+
+    <testcase name="three" status="passed">
+      <properties>
+        <property name="polarion-testcase-id" value="POL-105"></property>
+      </properties>
+    </testcase>
+  </testsuite>
+</testsuites>
+-----

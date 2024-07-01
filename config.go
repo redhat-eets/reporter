@@ -70,6 +70,7 @@ type ReportingRouteConfig struct {
 
 type ReportingTestSuiteConfig struct {
 	Name      string                    `mapstructure:"name"`
+	Property  string                    `mapstructure:"property"`
 	TestCases []ReportingTestCaseConfig `mapstructure:"testCases"`
 }
 
