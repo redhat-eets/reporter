@@ -127,7 +127,13 @@ func loadConfig(path string) (reporter.Config, error) {
 	viper.SetEnvPrefix(EnvNamePrefix)
 	viper.SetConfigName(ConfigName)
 	viper.SetConfigType(ConfigType)
-	viper.AddConfigPath(path)
+
+	fi, err := os.Stat(path)
+	if err != nil || fi.IsDir() {
+		viper.AddConfigPath(path)
+	} else {
+		viper.SetConfigFile(path)
+	}
 
 	// Load default config
 	if err := viper.ReadConfig(bytes.NewBuffer(reporter.EmbeddedDefaultConfig)); err != nil {
