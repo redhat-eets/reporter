@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="5" disabled="0" errors="0" failures="0" time="10.123456789">
+    <testsuite name="testdata.valid.multiple_test_cases" package="/var/lib/reporter/testdata" tests="5" disabled="0" skipped="0" errors="0" failures="0" time="10.123456789" timestamp="2024-01-02T03:04:05">
+        <testcase name="one" classname="testdata.valid.multiple_test_cases" status="passed" time="10.123456789"></testcase>
+        <testcase name="two" classname="testdata.valid.multiple_test_cases" status="passed" time="10.123456789"></testcase>
+        <testcase name="three" classname="testdata.valid.multiple_test_cases" status="passed" time="10.123456789"></testcase>
+        <testcase name="four" classname="testdata.valid.multiple_test_cases" status="passed" time="10.123456789"></testcase>
+        <testcase name="five" classname="testdata.valid.multiple_test_cases" status="passed" time="10.123456789"></testcase>
+    </testsuite>
+</testsuites>

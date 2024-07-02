@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testcases tests="1" disabled="0" errors="0" failures="0" time="10.123456789">
+    <testcase name="testdata.invalid.broken_schema" package="/var/lib/reporter/testdata" tests="1" disabled="0" skipped="0" errors="0" failures="0" time="10.123456789" timestamp="2024-01-02T03:04:05">
+        <testsuite name="broken_schema" classname="testdata.invalid.broken_schema" status="passed" time="10.123456789"></testsuite>
+    </testcase>
+</testcases>
