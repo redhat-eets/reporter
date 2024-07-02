@@ -23,7 +23,7 @@ spec:
         contents: "Automated test suite execution status"
         includeTestCounts: true
       description:
-        templatePath: "templates/jira_subtask_desc.tmpl"
+        templatePath: "embedded:templates/jira_subtask_desc.tmpl"
       onSuccess:
         labels:
           - TELCO-V10N-TEST-SUITE-PASSED

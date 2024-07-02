@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -24,9 +25,20 @@ func getIssueDesiredStateFields(report AggregateReport, config Config) (f IssueD
 	}
 
 	descTemplatePath := desiredState.Description.TemplatePath
-	buf, err := RenderLocalTemplate(descTemplatePath, report)
-	if err != nil {
-		return f, fmt.Errorf("description template could not be rendered: %w", err)
+	embeddedTemplatePrefix := "embedded:"
+
+	var buf bytes.Buffer
+	if strings.HasPrefix(descTemplatePath, embeddedTemplatePrefix) {
+		path := strings.Replace(descTemplatePath, embeddedTemplatePrefix, "", 1)
+		buf, err = RenderEmbeddedTemplate(path, report)
+		if err != nil {
+			return f, fmt.Errorf("embedded description template could not be rendered: %w", err)
+		}
+	} else {
+		buf, err = RenderLocalTemplate(descTemplatePath, report)
+		if err != nil {
+			return f, fmt.Errorf("local description template could not be rendered: %w", err)
+		}
 	}
 	f.Description = buf.String()
 
