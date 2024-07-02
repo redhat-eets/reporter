@@ -23,7 +23,7 @@ To download the latest available binary for an `x86-64` linux-based system, issu
 
 [source, text]
 -----
-$ wget https://github.com/redhat-eets/reporter/releases/latest/download/reporter_Linux_x86_64 -O /tmp/reporter
+$ wget https://github.com/redhat-eets/reporter/releases/latest/download/reporter_linux_x86_64 -O /tmp/reporter
 $ chmod +x /tmp/reporter
 -----
 
