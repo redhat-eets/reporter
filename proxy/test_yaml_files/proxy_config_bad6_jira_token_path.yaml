@@ -1,0 +1,14 @@
+---
+tcp_listen_port: 6666
+jira_url: "http://localhost:10000"
+allowed_jira_paths:
+- path :  "/rest/api/2/issue/{id}"
+  methods:
+  - "GET"
+  - "POST"
+allowed_jira_projects:
+- "CNF"
+proxy_token_files:
+- "/home/bradyjoh/Downloads/telco_v10n_ft.token"
+# ERROR: Invalid jira_token_files path
+jira_token_file: "/home/nobodyshere/bad_path.token"

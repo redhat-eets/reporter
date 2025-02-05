@@ -1,0 +1,16 @@
+---
+tcp_listen_port: 9999
+jira_url: "http://localhost:10000"
+allowed_jira_paths:
+- path :  "/rest/api/2/issue/{id}"
+  methods:
+  - "GET"
+  - "POST"
+# ERROR: #allowed_jira_projects is missing
+#allowed_jira_projects:
+#- "CNF"
+proxy_token_files:
+- "/home/bradyjoh/Downloads/telco_v10n_ft.token"
+- "/home/bradyjoh/Downloads/telco_v10n_st.token"
+- "/home/bradyjoh/Downloads/telco_v10n_slcm.token"
+jira_token_file: "/home/bradyjoh/Downloads/access_token_jira_bradyjoh_at_redhat_com"
