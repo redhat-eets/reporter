@@ -1,0 +1,17 @@
+---
+tcp_listen_port: 9999
+jira_url: "http://issues.redhat.com"
+#jira_url: "http://localhost:10000"
+# The path variable in braces: {id} must be the same in all paths
+allowed_jira_paths:
+- path :  "/rest/api/2/issue/{id}"
+  methods:
+  - "GET"
+  - "POST"
+allowed_jira_projects:
+- "CNF-"
+proxy_token_files:
+- "./test_yaml_files/telco_v10n_ft.token"
+- "./test_yaml_files/telco_v10n_st.token"
+- "./test_yaml_files/telco_v10n_slcm.token"
+jira_token_file: "./test_yaml_files/jira_access.token"
