@@ -7,13 +7,14 @@ h1. Tests execution summary
 || Status || Number of test cases ||
 | ✔️ Passed | {{ .Counts.Passed }} |
 | ❌ Failed | {{ .Counts.Failed }} |
+| ⚠️ Errored | {{ .Counts.Errored }} |
 | 👟 Skipped | {{ .Counts.Skipped }} |
 | 🧮 *Total* | *{{ .Counts.Total }}* |
 
 h1. Tests execution detailed results
 
-|| Name || ✔️ Passed || ❌ Failed || 👟 Skipped || 🧮 *Total* ||
+|| Name || ✔️ Passed || ❌ Failed || ⚠️ Errored || 👟 Skipped || 🧮 *Total* ||
 {{- range .TestSuites }}
-| {{ .Name }} | {{ .Counts.Passed }} | {{ .Counts.Failed }} | {{ .Counts.Skipped }} | *{{ .Counts.Total }}* |
+| {{ .Name }} | {{ .Counts.Passed }} | {{ .Counts.Failed }} | {{ .Counts.Errored }} | {{ .Counts.Skipped }} | *{{ .Counts.Total }}* |
 {{- end }}
-| 🧮 *Total* | *{{ .Counts.Passed }}* | *{{ .Counts.Failed }}* | *{{ .Counts.Skipped }}* | *{{ .Counts.Total }}* |
+| 🧮 *Total* | *{{ .Counts.Passed }}* | *{{ .Counts.Failed }}* | *{{ .Counts.Errored }}* | *{{ .Counts.Skipped }}* | *{{ .Counts.Total }}* |

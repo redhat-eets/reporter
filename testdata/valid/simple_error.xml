@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" disabled="0" errors="1" failures="0" time="10.123456789">
+    <testsuite name="testdata.valid.simple" package="/var/lib/reporter/testdata"
+        tests="1" disabled="0" skipped="0" errors="1" failures="0" time="10.123456789"
+        timestamp="2024-01-02T03:04:05">
+        <testcase name="simple" classname="testdata.valid.simple" status="errored"
+            time="10.123456789">
+            <error message="This is an error message"/>
+        </testcase>
+    </testsuite>
+</testsuites>
