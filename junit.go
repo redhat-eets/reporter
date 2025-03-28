@@ -14,11 +14,10 @@ import (
 const MatchAllSymbol = "*"
 
 // Counts provides a container for storing information about test counts.
-// "Failed" counts both JUnit "Failures" and "Errors" under a common field, as Reporter does not need
-// to distinguish between the two types: both cause the test run to be marked as unsuccessful.
 type Counts struct {
 	Passed  int
 	Failed  int
+	Errored int
 	Skipped int
 	Total   int
 }
@@ -29,6 +28,8 @@ func (c *Counts) Add(test junit.Test) {
 		c.Passed++
 	} else if test.Status == junit.StatusSkipped {
 		c.Skipped++
+	} else if test.Status == junit.StatusError {
+		c.Errored++
 	} else {
 		c.Failed++
 	}
@@ -57,6 +58,7 @@ func (r *AggregateReport) AggregateCounts() {
 	for _, suite := range r.TestSuites {
 		r.Counts.Passed += suite.Counts.Passed
 		r.Counts.Failed += suite.Counts.Failed
+		r.Counts.Errored += suite.Counts.Errored
 		r.Counts.Skipped += suite.Counts.Skipped
 		r.Counts.Total += suite.Counts.Total
 	}
@@ -78,7 +80,8 @@ func LogAggregateReports(logger *log.Logger, reports []AggregateReport) {
 			note = "(no data to upload)"
 		}
 
-		logger.Printf("%-3s Passed %-4d Failed %-4d Skipped %-4d Total %-4d -> Jira %s %s", fmt.Sprintf("%d)", i+1), c.Passed, c.Failed, c.Skipped, c.Total, dest, note)
+		logger.Printf("%-3s Passed %-4d Failed %-4d Errored %-4d Skipped %-4d Total %-4d -> Jira %s %s",
+			fmt.Sprintf("%d)", i+1), c.Passed, c.Failed, c.Errored, c.Skipped, c.Total, dest, note)
 	}
 }
 

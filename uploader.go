@@ -43,7 +43,7 @@ func getIssueDesiredStateFields(report AggregateReport, config Config) (f IssueD
 	f.Description = buf.String()
 
 	f.Labels = desiredState.OnFailure.Labels
-	if report.Counts.Failed <= 0 {
+	if report.Counts.Failed == 0 && report.Counts.Errored == 0 {
 		f.Labels = desiredState.OnSuccess.Labels
 	}
 
