@@ -2,7 +2,7 @@
 This Sub-task has been automatically generated and is periodically updated with new information. All manual edits made to this Sub-task will eventually be discarded.
 {panel}
 
-h1. Tests execution summary
+h1. Summary
 
 || Status || Number of test cases ||
 | ✔️ Passed | {{ .Counts.Passed }} |
@@ -11,10 +11,19 @@ h1. Tests execution summary
 | 👟 Skipped | {{ .Counts.Skipped }} |
 | 🧮 *Total* | *{{ .Counts.Total }}* |
 
-h1. Tests execution detailed results
+h1. Detailed results
 
 || Name || ✔️ Passed || ❌ Failed || ⚠️ Errored || 👟 Skipped || 🧮 *Total* ||
 {{- range .TestSuites }}
 | {{ .Name }} | {{ .Counts.Passed }} | {{ .Counts.Failed }} | {{ .Counts.Errored }} | {{ .Counts.Skipped }} | *{{ .Counts.Total }}* |
 {{- end }}
 | 🧮 *Total* | *{{ .Counts.Passed }}* | *{{ .Counts.Failed }}* | *{{ .Counts.Errored }}* | *{{ .Counts.Skipped }}* | *{{ .Counts.Total }}* |
+
+{{ if .Metadata }}
+h1. Metadata
+
+|| Key || Value ||
+{{- range .Metadata }}
+| {{ .Key }} | {{ .Value }} |
+{{- end }}
+{{ end }}

@@ -8,6 +8,30 @@ import (
 	"strings"
 )
 
+// MetadataEntry represents a single key-value pair of metadata set by the user.
+type MetadataEntry struct {
+	Key   string
+	Value string
+}
+
+// LogMetadataEntries pretty-prints all system and user-provided metadata entries using a given logger.
+func LogMetadataEntries(logger *log.Logger, metadata []MetadataEntry) {
+	if len(metadata) == 0 {
+		return
+	}
+
+	// Calculate padding size by finding the longest key
+	maxKeyStrLength := 0
+	for _, entry := range metadata {
+		maxKeyStrLength = max(maxKeyStrLength, len(entry.Key))
+	}
+
+	logger.Println("Printing metadata collected from the system and user input")
+	for i, entry := range metadata {
+		logger.Printf("%-3s %-*s = %s", fmt.Sprintf("%d)", i+1), maxKeyStrLength, entry.Key, entry.Value)
+	}
+}
+
 // IssueDesiredStateFields stores values that are expected to be sent to Jira
 // in order for the Jira Issue to reach the desired state.
 type IssueDesiredStateFields struct {
@@ -16,12 +40,19 @@ type IssueDesiredStateFields struct {
 	Labels      []string
 }
 
-func getIssueDesiredStateFields(report AggregateReport, config Config) (f IssueDesiredStateFields, err error) {
+func getIssueDesiredStateFields(report AggregateReport, metadata []MetadataEntry, config Config) (f IssueDesiredStateFields, err error) {
 	desiredState := config.Spec.Jira.DesiredState
+
+	// Attach user-provided metadata to the test report
+	// The contents of this struct are used for rendering the final template
+	data := struct {
+		AggregateReport
+		Metadata []MetadataEntry
+	}{report, metadata}
 
 	f.Summary = desiredState.Summary.Contents
 	if desiredState.Summary.IncludeTestCounts {
-		f.Summary = fmt.Sprintf("%s (%d/%d PASSED)", f.Summary, report.Counts.Passed, report.Counts.Total-report.Counts.Skipped)
+		f.Summary = fmt.Sprintf("%s (%d/%d PASSED)", f.Summary, data.Counts.Passed, data.Counts.Total-data.Counts.Skipped)
 	}
 
 	descTemplatePath := desiredState.Description.TemplatePath
@@ -30,12 +61,12 @@ func getIssueDesiredStateFields(report AggregateReport, config Config) (f IssueD
 	var buf bytes.Buffer
 	if strings.HasPrefix(descTemplatePath, embeddedTemplatePrefix) {
 		path := strings.Replace(descTemplatePath, embeddedTemplatePrefix, "", 1)
-		buf, err = RenderEmbeddedTemplate(path, report)
+		buf, err = RenderEmbeddedTemplate(path, data)
 		if err != nil {
 			return f, fmt.Errorf("embedded description template could not be rendered: %w", err)
 		}
 	} else {
-		buf, err = RenderLocalTemplate(descTemplatePath, report)
+		buf, err = RenderLocalTemplate(descTemplatePath, data)
 		if err != nil {
 			return f, fmt.Errorf("local description template could not be rendered: %w", err)
 		}
@@ -56,7 +87,7 @@ func LogUploadSummary(logger *log.Logger, uploadedCount int, reports []Aggregate
 }
 
 // UploadSingleAggregateReport uploads a given AggregateReport to its destination.
-func UploadSingleAggregateReport(report AggregateReport, config Config, token string) error {
+func UploadSingleAggregateReport(report AggregateReport, metadata []MetadataEntry, config Config, token string) error {
 	if report.Destination == "" {
 		return errors.New("given report does not have a valid destination")
 	}
@@ -65,7 +96,7 @@ func UploadSingleAggregateReport(report AggregateReport, config Config, token st
 		return errors.New("given report is empty")
 	}
 
-	fields, err := getIssueDesiredStateFields(report, config)
+	fields, err := getIssueDesiredStateFields(report, metadata, config)
 	if err != nil {
 		return err
 	}
@@ -78,11 +109,11 @@ func UploadSingleAggregateReport(report AggregateReport, config Config, token st
 }
 
 // UploadAggregateReports takes multiple AggregateReports and uploads them all to their corresponding destinations.
-func UploadAggregateReports(reports []AggregateReport, config Config, token string) error {
+func UploadAggregateReports(reports []AggregateReport, metadata []MetadataEntry, config Config, token string) error {
 	uploadedCount := 0
 
 	for i, report := range reports {
-		if err := UploadSingleAggregateReport(report, config, token); err != nil {
+		if err := UploadSingleAggregateReport(report, metadata, config, token); err != nil {
 			WarnLog.Printf("Aggregate Report %d) could not be uploaded: %s", i+1, err)
 		} else {
 			uploadedCount++
