@@ -19,6 +19,7 @@ var UploadFlagSet = flag.NewFlagSet("upload", flag.ExitOnError)
 var (
 	flagConfigPath       string
 	flagJUnitInputPaths  []string
+	flagMetadataStrings  []string
 	flagJiraDestIssueID  string
 	flagJiraServerURL    string
 	flagJiraAccessToken  string
@@ -48,6 +49,13 @@ func init() {
 		"d",
 		defaultJiraDestIssueID,
 		"Optional destination to upload all test reports to. Can either be a Jira Story or Sub-task",
+	)
+	UploadFlagSet.StringSliceVarP(
+		&flagMetadataStrings,
+		"metadata",
+		"m",
+		[]string{},
+		"Optional metadata string in the 'key=value' format. Can be provided multiple times",
 	)
 	UploadFlagSet.StringVarP(
 		&flagConfigPath,
@@ -121,6 +129,34 @@ func getJUnitTestReportPaths(paths []string) (files []string, err error) {
 	return files, err
 }
 
+func getUserMetadataFromInput(input []string) (entries []reporter.MetadataEntry) {
+	separator := "="
+
+	for _, s := range input {
+		p := strings.Split(s, separator)
+
+		if len(p) < 2 {
+			ErrorLog.Fatalf("Received '%s' as a metadata string, expected the input to be in the 'key=value' format instead", s)
+		}
+
+		key := p[0]
+		value := strings.Join(p[1:], separator)
+		entry := reporter.MetadataEntry{
+			Key:   strings.TrimSpace(key),
+			Value: strings.TrimSpace(value),
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries
+}
+
+func getSystemMetadata() (entries []reporter.MetadataEntry) {
+	return []reporter.MetadataEntry{
+		{Key: "Reporter version", Value: fmt.Sprintf("%s (commit %s)", Version, CommitHash)},
+	}
+}
+
 func loadConfig(path string) (reporter.Config, error) {
 	var config reporter.Config
 
@@ -173,6 +209,15 @@ func UploadCmd() {
 		ErrorLog.Fatalln(err)
 	}
 
+	// Get optional metadata provided by the user
+	// If any metadata has been given, prepend it with system info such as the CLI version, etc
+	metadata := getUserMetadataFromInput(flagMetadataStrings)
+	if len(metadata) > 0 {
+		systemMetadata := getSystemMetadata()
+		metadata = append(systemMetadata, metadata...)
+	}
+	reporter.LogMetadataEntries(InfoLog, metadata)
+
 	// Ensure only JUnit test reports will be processed and not other artifacts (logs, etc)
 	junitTestReportPaths, err := getJUnitTestReportPaths(flagJUnitInputPaths)
 	if err != nil {
@@ -208,7 +253,7 @@ func UploadCmd() {
 			ErrorLog.Fatalf("Jira access token not set. Use the -t/--jira-token flag or set the '%s' env var", EnvNameJiraAccessToken)
 		}
 
-		if err := reporter.UploadAggregateReports(reports, config, token); err != nil {
+		if err := reporter.UploadAggregateReports(reports, metadata, config, token); err != nil {
 			ErrorLog.Fatalln(err)
 		}
 	}

@@ -132,6 +132,17 @@ $ reporter upload -d EXAMPLE-15
 
 In some scenarios, specifying one destination for all test results might not be practical. Refer to the next chapter to learn how to configure more advanced routing for test reports.
 
+=== Annotating results with custom metadata
+
+If you want to provide additional information such as artifact links, source commit hashes, release versions, etc you can use the `-m/--metadata` option. This CLI option can be repeated multiple times to enter as many metadata strings as needed.
+
+[source, text]
+-----
+$ reporter upload -d EXAMPLE-15 \
+    -m "CI Job URL = https://prow.ci.openshift.org" \
+    -m "Commit hash = a1b2c3d"
+-----
+
 == Advanced usage
 
 === Configuring routing rules
