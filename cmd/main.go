@@ -30,6 +30,7 @@ var Commands = []string{"upload"}
 const (
 	EnvNamePrefix          = "REPORTER"
 	EnvNameJiraAccessToken = "REPORTER_JIRA_TOKEN"
+	EnvNameJiraUserEmail   = "REPORTER_JIRA_USER"
 
 	ConfigName = "config"
 	ConfigType = "yaml"
