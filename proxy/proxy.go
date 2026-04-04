@@ -11,11 +11,11 @@ import (
 
 //
 // Some example queries
-// curl -H "Authorization: Bearer <access token str>" --get https://issues.redhat.com/rest/api/2/filter/12436327 | jq
-// curl -H "Authorization: Bearer <access token str>" --get https://issues.redhat.com/rest/api/2/issue/CNF-9184?fields=key,summary | jq
-// curl -H "Authorization: Bearer <access token str>" --get https://issues.redhat.com/rest/api/2/search?jql="key=CNF-9184"#fields=key,summary | jq
-// curl -H "Authorization: Bearer <access token str>" -H "Content-Type: application/json; charset=utf-8" --data "{\"jql\": \"key=CNF-9184\", \"fields\": [\"key\", \"summary\"]}" https://issues.redhat.com/rest/api/2/search | jq
-// curl -H "Authorization: Bearer <access token str>" -H "Content-Type: application/json; charset=utf-8" --data "{\"jql\": \"project in (CNF) and Issuetype = Story and fixVersion = openshift-4.16 and labels in (TELCO-V10N-ST)\", \"fields\": [\"key\", \"summary\"]}" https://issues.redhat.com/rest/api/2/search | jq
+// curl -H "Authorization: Bearer <access token str>" --get https://redhat.atlassian.net/rest/api/2/filter/12436327 | jq
+// curl -H "Authorization: Bearer <access token str>" --get https://redhat.atlassian.net/rest/api/2/issue/CNF-9184?fields=key,summary | jq
+// curl -H "Authorization: Bearer <access token str>" --get https://redhat.atlassian.net/rest/api/2/search?jql="key=CNF-9184"#fields=key,summary | jq
+// curl -H "Authorization: Bearer <access token str>" -H "Content-Type: application/json; charset=utf-8" --data "{\"jql\": \"key=CNF-9184\", \"fields\": [\"key\", \"summary\"]}" https://redhat.atlassian.net/rest/api/2/search | jq
+// curl -H "Authorization: Bearer <access token str>" -H "Content-Type: application/json; charset=utf-8" --data "{\"jql\": \"project in (CNF) and Issuetype = Story and fixVersion = openshift-4.16 and labels in (TELCO-V10N-ST)\", \"fields\": [\"key\", \"summary\"]}" https://redhat.atlassian.net/rest/api/2/search | jq
 //
 // curl -H "Authorization: Bearer telco_v10n_ft.token" --get http://localhost:9999/rest/api/2/issues/CNN-9184 => 404 page not found
 // curl -H "Authorization: Bearer telco_v10n_ft.token" -X PUT http://localhost:9999/rest/api/2/issue/CNN-9184 => 405: Method not allowed on this path

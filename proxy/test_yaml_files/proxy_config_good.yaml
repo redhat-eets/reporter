@@ -1,6 +1,6 @@
 ---
 tcp_listen_port: 9999
-jira_url: "http://issues.redhat.com"
+jira_url: "http://redhat.atlassian.net"
 #jira_url: "http://localhost:10000"
 # The path variable in braces: {id} must be the same in all paths
 allowed_jira_paths:

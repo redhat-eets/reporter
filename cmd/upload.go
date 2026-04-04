@@ -31,7 +31,7 @@ const (
 	defaultConfigPath       = "."
 	defaultJUnitInputPath   = "input/"
 	defaultJiraDestIssueID  = ""
-	defaultJiraServerURL    = "https://issues.redhat.com"
+	defaultJiraServerURL    = "https://redhat.atlassian.net"
 	defaultJiraAccessToken  = ""
 	defaultJiraUserEmail    = ""
 	defaultJiraSyncDisabled = false
