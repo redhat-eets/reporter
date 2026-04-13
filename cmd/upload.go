@@ -23,6 +23,7 @@ var (
 	flagJiraDestIssueID  string
 	flagJiraServerURL    string
 	flagJiraAccessToken  string
+	flagJiraUserEmail    string
 	flagJiraSyncDisabled bool
 )
 
@@ -30,8 +31,9 @@ const (
 	defaultConfigPath       = "."
 	defaultJUnitInputPath   = "input/"
 	defaultJiraDestIssueID  = ""
-	defaultJiraServerURL    = "https://issues.redhat.com"
+	defaultJiraServerURL    = "https://redhat.atlassian.net"
 	defaultJiraAccessToken  = ""
+	defaultJiraUserEmail    = ""
 	defaultJiraSyncDisabled = false
 )
 
@@ -78,6 +80,13 @@ func init() {
 		defaultJiraAccessToken,
 		fmt.Sprintf("Service account access token for Jira. Can also be set using the \"%s\" env var", EnvNameJiraAccessToken),
 	)
+	UploadFlagSet.StringVarP(
+		&flagJiraUserEmail,
+		"jira-user",
+		"u",
+		defaultJiraUserEmail,
+		fmt.Sprintf("Service account email for Basic auth (Atlassian Cloud). Can also be set using the \"%s\" env var", EnvNameJiraUserEmail),
+	)
 	UploadFlagSet.BoolVarP(
 		&flagJiraSyncDisabled,
 		"no-sync",
@@ -89,6 +98,7 @@ func init() {
 
 	viper.BindPFlags(UploadFlagSet)
 	viper.BindEnv("jira-token", EnvNameJiraAccessToken)
+	viper.BindEnv("jira-user", EnvNameJiraUserEmail)
 }
 
 func isValidJUnitInputFile(path string, d fs.DirEntry, err error) bool {
@@ -248,12 +258,13 @@ func UploadCmd() {
 		InfoLog.Println("[-n/--no-sync flag set] Synchronization with Jira has been disabled. No test reports will be uploaded")
 	} else {
 		token := viper.GetString("jira-token")
+		userEmail := viper.GetString("jira-user")
 
 		if token == "" {
 			ErrorLog.Fatalf("Jira access token not set. Use the -t/--jira-token flag or set the '%s' env var", EnvNameJiraAccessToken)
 		}
 
-		if err := reporter.UploadAggregateReports(reports, metadata, config, token); err != nil {
+		if err := reporter.UploadAggregateReports(reports, metadata, config, token, userEmail); err != nil {
 			ErrorLog.Fatalln(err)
 		}
 	}

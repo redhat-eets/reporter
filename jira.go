@@ -2,6 +2,7 @@ package reporter
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,6 +21,7 @@ const (
 type JiraClient struct {
 	ServerURL   string
 	AccessToken string
+	UserEmail   string
 }
 
 // JiraIssue represents an Issue as returned by the Jira REST API.
@@ -122,8 +124,16 @@ func (c JiraClient) prepareRequest(method string, url string, body io.Reader) (*
 		return nil, err
 	}
 
+	var authHeader string
+	if c.UserEmail != "" {
+		credentials := base64.StdEncoding.EncodeToString([]byte(c.UserEmail + ":" + c.AccessToken))
+		authHeader = fmt.Sprintf("Basic %s", credentials)
+	} else {
+		authHeader = fmt.Sprintf("Bearer %s", c.AccessToken)
+	}
+
 	req.Header = http.Header{
-		"Authorization": {fmt.Sprintf("Bearer %s", c.AccessToken)},
+		"Authorization": {authHeader},
 		"Content-Type":  {"application/json"},
 	}
 

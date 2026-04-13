@@ -87,7 +87,7 @@ func LogUploadSummary(logger *log.Logger, uploadedCount int, reports []Aggregate
 }
 
 // UploadSingleAggregateReport uploads a given AggregateReport to its destination.
-func UploadSingleAggregateReport(report AggregateReport, metadata []MetadataEntry, config Config, token string) error {
+func UploadSingleAggregateReport(report AggregateReport, metadata []MetadataEntry, config Config, token string, userEmail string) error {
 	if report.Destination == "" {
 		return errors.New("given report does not have a valid destination")
 	}
@@ -101,7 +101,7 @@ func UploadSingleAggregateReport(report AggregateReport, metadata []MetadataEntr
 		return err
 	}
 
-	if err := updateStatusInJira(config, token, report.Destination, fields); err != nil {
+	if err := updateStatusInJira(config, token, userEmail, report.Destination, fields); err != nil {
 		return err
 	}
 
@@ -109,11 +109,11 @@ func UploadSingleAggregateReport(report AggregateReport, metadata []MetadataEntr
 }
 
 // UploadAggregateReports takes multiple AggregateReports and uploads them all to their corresponding destinations.
-func UploadAggregateReports(reports []AggregateReport, metadata []MetadataEntry, config Config, token string) error {
+func UploadAggregateReports(reports []AggregateReport, metadata []MetadataEntry, config Config, token string, userEmail string) error {
 	uploadedCount := 0
 
 	for i, report := range reports {
-		if err := UploadSingleAggregateReport(report, metadata, config, token); err != nil {
+		if err := UploadSingleAggregateReport(report, metadata, config, token, userEmail); err != nil {
 			WarnLog.Printf("Aggregate Report %d) could not be uploaded: %s", i+1, err)
 		} else {
 			uploadedCount++
@@ -134,10 +134,11 @@ func isJiraSubtaskValidDestination(issue *JiraIssue, config Config) bool {
 	return strings.Contains(issue.Summary, desiredSummaryContents)
 }
 
-func updateStatusInJira(config Config, token string, issueID string, fields IssueDesiredStateFields) error {
+func updateStatusInJira(config Config, token string, userEmail string, issueID string, fields IssueDesiredStateFields) error {
 	client := JiraClient{
 		ServerURL:   config.Spec.Jira.Server.URL,
 		AccessToken: token,
+		UserEmail:   userEmail,
 	}
 
 	issue, err := client.GetIssue(issueID)

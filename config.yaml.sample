@@ -7,7 +7,7 @@ spec:
   jira:
     # Specify which Jira instance to connect to
     server:
-      url: "https://issues.redhat.com"
+      url: "https://redhat.atlassian.net"
 
     # Configure constraints for auto-discovery of Jira issues
     discovery:

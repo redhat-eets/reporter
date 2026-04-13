@@ -1,6 +1,6 @@
 ---
 tcp_listen_port: 9999
-#jira_url: "http://issues.redhat.com"
+#jira_url: "http://redhat.atlassian.net"
 jira_url: "http://localhost:10000"
 # ERROR: no path variable
 allowed_jira_paths:
